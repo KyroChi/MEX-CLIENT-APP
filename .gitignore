@@ -2,3 +2,4 @@ Application/build/
 .gradle/
 .idea/
 build/
+Application/.idea/
