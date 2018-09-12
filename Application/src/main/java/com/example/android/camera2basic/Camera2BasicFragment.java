@@ -20,6 +20,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
@@ -28,8 +29,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.ColorMatrix;
-import android.graphics.ColorMatrixColorFilter;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Paint;
@@ -37,7 +36,6 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
-import android.graphics.YuvImage;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -54,27 +52,22 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
-import android.support.annotation.ColorRes;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
 import android.view.Surface;
-import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.support.v4.app.DialogFragment;
 
-import java.io.ByteArrayOutputStream;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -88,7 +81,7 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-public class Camera2BasicFragment extends Fragment
+public class Camera2BasicFragment extends android.support.v4.app.Fragment
         implements View.OnClickListener, ActivityCompat.OnRequestPermissionsResultCallback {
 
     private TextView mCloudLatency;
@@ -299,15 +292,15 @@ public class Camera2BasicFragment extends Fragment
             if (!mAsyncRequestHandler.getEdgeBusy() || !mAsyncRequestHandler.getCloudBusy()) {
                 Image image = reader.acquireLatestImage();
                 Log.w("camera2diagnostics", "onImageAvailable");
-                //mBackgroundHandler.post(new ImageSaver(reader.acquireNextImage(), mFile));
+                if (image == null) {
+                    Log.e("BDA", "null image. bail out.");
+                    return;
+                }
 
                 ByteBuffer buffer = image.getPlanes()[0].getBuffer();
                 byte[] bytes = new byte[buffer.remaining()];
                 buffer.get(bytes);
                 final Bitmap bitmapImage = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, null);
-
-                //mImageView.setImageBitmap(bitmapImage);
-
 
                 Matrix matrix = new Matrix();
 
@@ -317,8 +310,16 @@ public class Camera2BasicFragment extends Fragment
                 final int heightOff = (activity.getWindowManager().getDefaultDisplay().getHeight() - mTextureView.getHeight()) / 2;
                 int deg = 0;
                 final int factor = 10;
-                int width = image.getWidth() / factor;
-                int height = image.getHeight() / factor;
+                int width = 0;
+                int height = 0;
+                try {
+                    width = image.getWidth() / factor;
+                    height = image.getHeight() / factor;
+                } catch (IllegalStateException e) {
+                    Log.e("BDA", "image already closed. bail out.");
+                    return;
+                }
+                Log.d("BDA", "image size="+image.getWidth()+","+image.getHeight()+"/factor("+factor+")="+width+","+height);
                 float notFinalWidthRatio = (float) mTextureView.getWidth() / (float) image.getWidth();
                 float notFinalHeightRatio = (float) mTextureView.getHeight() / (float) image.getHeight();
 
@@ -839,7 +840,7 @@ public class Camera2BasicFragment extends Fragment
             e.printStackTrace();
         } catch (NullPointerException e) {
             // Currently an NPE is thrown when the Camera2API is used but not supported on the
-            // device this code runs.
+            // device this code runs
             ErrorDialog.newInstance(getString(R.string.camera_error))
                     .show(getChildFragmentManager(), FRAGMENT_DIALOG);
         }
@@ -1229,7 +1230,7 @@ public class Camera2BasicFragment extends Fragment
     /**
      * Shows an error message dialog.
      */
-    public static class ErrorDialog extends DialogFragment {
+    public static class ErrorDialog extends android.support.v4.app.DialogFragment {
 
         private static final String ARG_MESSAGE = "message";
 
@@ -1261,12 +1262,12 @@ public class Camera2BasicFragment extends Fragment
     /**
      * Shows OK/Cancel confirmation dialog about camera permission.
      */
-    public static class ConfirmationDialog extends DialogFragment {
+    public static class ConfirmationDialog extends android.support.v4.app.DialogFragment {
 
         @NonNull
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            final Fragment parent = getParentFragment();
+            final android.support.v4.app.Fragment parent = getParentFragment();
             return new AlertDialog.Builder(getActivity())
                     .setMessage(R.string.request_permission)
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
