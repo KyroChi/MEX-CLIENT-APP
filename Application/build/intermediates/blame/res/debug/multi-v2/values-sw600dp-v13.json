@@ -1,10 +1,27 @@
 {
     "logs": [
         {
-            "outputFile": "/Users/kyle/work/mobile_edge_x/android-Camera2Basic/Application/build/intermediates/incremental/mergeDebugResources/merged.dir/values-sw600dp-v13/values-sw600dp-v13.xml",
+            "outputFile": "/Users/kyle/work/mobile_edge_x/MobiledgeX_OpenCV_Demo_App/client/Application/build/intermediates/incremental/mergeDebugResources/merged.dir/values-sw600dp-v13/values-sw600dp-v13.xml",
             "map": [
                 {
-                    "source": "/Users/kyle/work/mobile_edge_x/android-Camera2Basic/Application/src/main/res/values-sw600dp/template-styles.xml",
+                    "source": "/Users/kyle/work/mobile_edge_x/MobiledgeX_OpenCV_Demo_App/client/Application/src/main/res/values-sw600dp/template-dimens.xml",
+                    "from": {
+                        "startLines": "20,21",
+                        "startColumns": "4,4",
+                        "startOffsets": "656,724",
+                        "endColumns": "67,67",
+                        "endOffsets": "719,787"
+                    },
+                    "to": {
+                        "startLines": "10,11",
+                        "startColumns": "4,4",
+                        "startOffsets": "611,679",
+                        "endColumns": "67,67",
+                        "endOffsets": "674,742"
+                    }
+                },
+                {
+                    "source": "/Users/kyle/work/mobile_edge_x/MobiledgeX_OpenCV_Demo_App/client/Application/src/main/res/values-sw600dp/template-styles.xml",
                     "from": {
                         "startLines": "18",
                         "startColumns": "4",
@@ -20,23 +37,6 @@
                         "endLines": "16",
                         "endColumns": "12",
                         "endOffsets": "987"
-                    }
-                },
-                {
-                    "source": "/Users/kyle/work/mobile_edge_x/android-Camera2Basic/Application/src/main/res/values-sw600dp/template-dimens.xml",
-                    "from": {
-                        "startLines": "20,21",
-                        "startColumns": "4,4",
-                        "startOffsets": "656,724",
-                        "endColumns": "67,67",
-                        "endOffsets": "719,787"
-                    },
-                    "to": {
-                        "startLines": "10,11",
-                        "startColumns": "4,4",
-                        "startOffsets": "611,679",
-                        "endColumns": "67,67",
-                        "endOffsets": "674,742"
                     }
                 },
                 {

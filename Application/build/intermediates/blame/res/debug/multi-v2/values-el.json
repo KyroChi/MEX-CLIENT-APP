@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "/Users/kyle/work/mobile_edge_x/android-Camera2Basic/Application/build/intermediates/incremental/mergeDebugResources/merged.dir/values-el/values-el.xml",
+            "outputFile": "/Users/kyle/work/mobile_edge_x/MobiledgeX_OpenCV_Demo_App/client/Application/build/intermediates/incremental/mergeDebugResources/merged.dir/values-el/values-el.xml",
             "map": [
                 {
                     "source": "/Users/kyle/.gradle/caches/transforms-1/files-1.1/support-compat-27.0.2.aar/bed5348fa185429632a1a572ca3877bb/res/values-el/values-el.xml",

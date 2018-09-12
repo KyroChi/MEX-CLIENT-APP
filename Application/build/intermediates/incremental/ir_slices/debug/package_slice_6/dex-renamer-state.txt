@@ -1,4 +1,4 @@
-#Tue Aug 28 13:01:17 PDT 2018
-base.0=/Users/kyle/work/mobile_edge_x/android-Camera2Basic/Application/build/intermediates/transforms/dexMerger/debug/6
+#Wed Sep 12 08:30:04 PDT 2018
+base.0=/Users/kyle/work/mobile_edge_x/MobiledgeX_OpenCV_Demo_App/client/Application/build/intermediates/transforms/dexMerger/debug/24
 path.0=classes.dex
 renamed.0=classes.dex

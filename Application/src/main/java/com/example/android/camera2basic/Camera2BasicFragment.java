@@ -96,17 +96,13 @@ public class Camera2BasicFragment extends Fragment
     private TextView mCloudStd;
     private TextView mEdgeStd;
 
-    private Semaphore mCloudMutex = new Semaphore(10);
-    private Semaphore mEdgeMutex = new Semaphore(10);
-
-    private ImageView mCloudView;
-    private ImageView mEdgeView;
-    private ImageView mRectangle;
+    private static Semaphore mCloudMutex = new Semaphore(10);
+    private static Semaphore mEdgeMutex = new Semaphore(10);
 
     private BoundingBox mCloudBB;
     private BoundingBox mEdgeBB;
 
-    private AsyncRequestHandler mAsyncRequestHandler = new AsyncRequestHandler(mCloudMutex, mEdgeMutex);
+    private static AsyncRequestHandler mAsyncRequestHandler = new AsyncRequestHandler(mCloudMutex, mEdgeMutex);
     /**
      * Conversion from screen rotation to JPEG orientation.
      */
@@ -300,162 +296,174 @@ public class Camera2BasicFragment extends Fragment
             // How to manipulate preview frames:
             // https://stackoverflow.com/questions/25462277/camera-preview-image-data-processing-with-android-l-and-camera2-api
 
-            Image image = reader.acquireLatestImage();
-            Log.w("camera2diagnostics", "onImageAvailable");
-            //mBackgroundHandler.post(new ImageSaver(reader.acquireNextImage(), mFile));
+            if (!mAsyncRequestHandler.getEdgeBusy() || !mAsyncRequestHandler.getCloudBusy()) {
+                Image image = reader.acquireLatestImage();
+                Log.w("camera2diagnostics", "onImageAvailable");
+                //mBackgroundHandler.post(new ImageSaver(reader.acquireNextImage(), mFile));
 
-            ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-            byte[] bytes = new byte[buffer.remaining()];
-            buffer.get(bytes);
-            final Bitmap bitmapImage = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, null);
+                ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+                byte[] bytes = new byte[buffer.remaining()];
+                buffer.get(bytes);
+                final Bitmap bitmapImage = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, null);
 
-            //mImageView.setImageBitmap(bitmapImage);
-
-
-            Matrix matrix = new Matrix();
-
-            Activity activity = getActivity();
-            int displayRotation = activity.getWindowManager().getDefaultDisplay().getRotation();
-            final int widthOff = (activity.getWindowManager().getDefaultDisplay().getWidth() - mTextureView.getWidth())/2;
-            final int heightOff = (activity.getWindowManager().getDefaultDisplay().getHeight() - mTextureView.getHeight())/2;
-            int deg = 0;
-            final int factor = 10;
-            int width = image.getWidth() / factor;
-            int height = image.getHeight() / factor;
-            float notFinalWidthRatio = (float) mTextureView.getWidth() / (float) image.getWidth();
-            float notFinalHeightRatio = (float) mTextureView.getHeight() / (float) image.getHeight();
-
-            if (notFinalWidthRatio == 0 || notFinalHeightRatio == 0) {
-                notFinalWidthRatio = 1;
-                notFinalHeightRatio = 1;
-            }
-            final float widthRatio = notFinalWidthRatio;
-            final float heightRatio = notFinalHeightRatio;
-            switch (displayRotation) {
-                case Surface.ROTATION_0:
-                    deg = 270;
-                    height = image.getWidth() / factor;
-                    width = image.getHeight() / factor;
-                    break;
-                case Surface.ROTATION_180:
-                    deg = 90;
-                    height = image.getWidth() / factor;
-                    width = image.getHeight() / factor;
-                    break;
-                case Surface.ROTATION_90:
-                    deg = 0;
-                    break;
-                case Surface.ROTATION_270:
-                    deg = 180;
-                    break;
-                default:
-                    Log.e(TAG, "Display rotation is invalid: " + displayRotation);
-            }
-
-            //matrix.postRotate(deg);
-
-            Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmapImage,
-                    image.getWidth() / factor, image.getHeight() / factor, true);
-
-            final Bitmap rotatedBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0,
-                    scaledBitmap.getWidth() , scaledBitmap.getHeight(), matrix, true);
-
-            mAsyncRequestHandler.sendImage(rotatedBitmap);
-
-            final int finalDeg = deg;
-
-            final int finalWidth = mTextureView.getWidth();
-            final int finalHeight = mTextureView.getHeight();
-
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
-                @Override
-                public void run() {
-                    //mCloudView.setImageBitmap(displayBitmap);
-                    //mEdgeView.setImageBitmap(displayBitmap);
-                    mCloudBB.rect = mAsyncRequestHandler.getCloudRect();
-                    mEdgeBB.rect = mAsyncRequestHandler.getEdgeRect();
-
-                    int tmp = 0;
-
-                    try {
-                        mCloudMutex.acquire();
-                        try {
-                            mEdgeMutex.acquire();
-                            try {
-                                Rect mcbbptr = mCloudBB.rect;
-                                Rect mebbptr = mEdgeBB.rect;
-                                Log.d("Rects:", mcbbptr.toShortString() + " " + mebbptr.toShortString());
-
-                                mcbbptr.left *= factor;
-                                mcbbptr.left *= widthRatio;
-                                tmp = mcbbptr.left;
-                                mcbbptr.left = finalWidth - mcbbptr.left;
-                                mcbbptr.left += widthOff;
-
-                                mcbbptr.right *= factor;
-                                mcbbptr.right *= widthRatio;
-                                mcbbptr.right = finalWidth - mcbbptr.right;
-                                mcbbptr.right += widthOff;
-
-                                mcbbptr.top *= factor;
-                                mcbbptr.top *= heightRatio;
-                                mcbbptr.top += heightOff;
-
-                                mcbbptr.bottom *= factor;
-                                mcbbptr.bottom *= heightRatio;
-                                mcbbptr.bottom += heightOff;
-
-                                tmp = mcbbptr.left;
-                                mcbbptr.left = mcbbptr.right;
-                                mcbbptr.right = tmp;
-
-                                mebbptr.left *= factor;
-                                mebbptr.left *= widthRatio;
-                                mebbptr.left = (finalWidth) - mebbptr.left;
-                                mebbptr.left += widthOff;
-
-                                mebbptr.right *= factor;
-                                mebbptr.right *= widthRatio;
-                                mebbptr.right = (finalWidth) - mebbptr.right;
-                                mebbptr.right += widthOff;
-
-                                mebbptr.top *= factor;
-                                mebbptr.top *= heightRatio;
-                                mebbptr.top += heightOff;
-
-                                mebbptr.bottom *= factor;
-                                mebbptr.bottom *= heightRatio;
-                                mebbptr.bottom += heightOff;
-
-                                tmp = mebbptr.left;
-                                mebbptr.left = mebbptr.right;
-                                mebbptr.right = tmp;
-
-                                mCloudBB.invalidate();
-                                mEdgeBB.invalidate();
-                            } finally {
-                                mCloudMutex.release();
-                                mEdgeMutex.release();
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-                    mCloudLatency.setText("Cloud Latency: " + String.valueOf(mAsyncRequestHandler.getCloudLatency()/1000000) + " ms");
-                    mEdgeLatency.setText("Edge Latency: " + String.valueOf(mAsyncRequestHandler.getEdgeLatency()/1000000)+ " ms");
-                    mCloudStd.setText("Cloud STDDEV: " + new DecimalFormat("#.##").format(mAsyncRequestHandler.cloudStdDev/1000000));
-                    mEdgeStd.setText("Edge STDDEV: " + new DecimalFormat("#.##").format(mAsyncRequestHandler.edgeStdDev/1000000));
+                //mImageView.setImageBitmap(bitmapImage);
 
 
-                    // mRectangle.setImageBitmap(displayBitmap);
+                Matrix matrix = new Matrix();
+
+                Activity activity = getActivity();
+                int displayRotation = activity.getWindowManager().getDefaultDisplay().getRotation();
+                final int widthOff = (activity.getWindowManager().getDefaultDisplay().getWidth() - mTextureView.getWidth()) / 2;
+                final int heightOff = (activity.getWindowManager().getDefaultDisplay().getHeight() - mTextureView.getHeight()) / 2;
+                int deg = 0;
+                final int factor = 10;
+                int width = image.getWidth() / factor;
+                int height = image.getHeight() / factor;
+                float notFinalWidthRatio = (float) mTextureView.getWidth() / (float) image.getWidth();
+                float notFinalHeightRatio = (float) mTextureView.getHeight() / (float) image.getHeight();
+
+                if (notFinalWidthRatio == 0 || notFinalHeightRatio == 0) {
+                    notFinalWidthRatio = 1;
+                    notFinalHeightRatio = 1;
                 }
-            });
+                final float widthRatio = notFinalWidthRatio;
+                final float heightRatio = notFinalHeightRatio;
+                switch (displayRotation) {
+                    case Surface.ROTATION_0:
+                        deg = 270;
+                        height = image.getWidth() / factor;
+                        width = image.getHeight() / factor;
+                        break;
+                    case Surface.ROTATION_180:
+                        deg = 90;
+                        height = image.getWidth() / factor;
+                        width = image.getHeight() / factor;
+                        break;
+                    case Surface.ROTATION_90:
+                        deg = 0;
+                        break;
+                    case Surface.ROTATION_270:
+                        deg = 180;
+                        break;
+                    default:
+                        Log.e(TAG, "Display rotation is invalid: " + displayRotation);
+                }
 
-            if (image != null) {
-                image.close();
+                //matrix.postRotate(deg);
+
+                Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmapImage,
+                        image.getWidth() / factor, image.getHeight() / factor, true);
+
+                final Bitmap rotatedBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0,
+                        scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix, true);
+
+                mAsyncRequestHandler.sendImage(rotatedBitmap);
+
+                final int finalWidth = mTextureView.getWidth();
+                final int finalHeight = mTextureView.getHeight();
+
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        int tmp = 0;
+
+                        if (mAsyncRequestHandler.cloudNewData) {
+                            try {
+                                mCloudMutex.acquire();
+                                try {
+                                    mCloudBB.rect = mAsyncRequestHandler.getCloudRect();
+
+                                    Rect mcbbptr = mCloudBB.rect;
+                                    mcbbptr.left *= factor;
+                                    mcbbptr.left *= widthRatio;
+                                    mcbbptr.left = finalWidth - mcbbptr.left;
+                                    mcbbptr.left += widthOff;
+
+                                    mcbbptr.right *= factor;
+                                    mcbbptr.right *= widthRatio;
+                                    mcbbptr.right = finalWidth - mcbbptr.right;
+                                    mcbbptr.right += widthOff;
+
+                                    mcbbptr.top *= factor;
+                                    mcbbptr.top *= heightRatio;
+                                    mcbbptr.top += heightOff;
+
+                                    mcbbptr.bottom *= factor;
+                                    mcbbptr.bottom *= heightRatio;
+                                    mcbbptr.bottom += heightOff;
+
+                                    tmp = mcbbptr.left;
+                                    mcbbptr.left = mcbbptr.right;
+                                    mcbbptr.right = tmp;
+
+                                    Log.d("Printing Cloud Rect", mCloudBB.rect.toShortString());
+
+                                    mCloudBB.invalidate();
+
+                                    mAsyncRequestHandler.cloudNewData = false;
+                                } finally {
+                                    mCloudMutex.release();
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        if (mAsyncRequestHandler.edgeNewData) {
+                            try {
+                                mEdgeMutex.acquire();
+                                try {
+                                    mEdgeBB.rect = mAsyncRequestHandler.getEdgeRect();
+
+                                    Rect mebbptr = mEdgeBB.rect;
+                                    mebbptr.left *= factor;
+                                    mebbptr.left *= widthRatio;
+                                    mebbptr.left = (finalWidth) - mebbptr.left;
+                                    mebbptr.left += widthOff;
+
+                                    mebbptr.right *= factor;
+                                    mebbptr.right *= widthRatio;
+                                    mebbptr.right = (finalWidth) - mebbptr.right;
+                                    mebbptr.right += widthOff;
+
+                                    mebbptr.top *= factor;
+                                    mebbptr.top *= heightRatio;
+                                    mebbptr.top += heightOff;
+
+                                    mebbptr.bottom *= factor;
+                                    mebbptr.bottom *= heightRatio;
+                                    mebbptr.bottom += heightOff;
+
+                                    tmp = mebbptr.left;
+                                    mebbptr.left = mebbptr.right;
+                                    mebbptr.right = tmp;
+
+                                    Log.d("Printing Edge Rect", mEdgeBB.rect.toShortString());
+
+                                    mEdgeBB.invalidate();
+
+                                    mAsyncRequestHandler.edgeNewData = false;
+                                } finally {
+                                    mEdgeMutex.release();
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        mCloudLatency.setText("Cloud Latency: " + String.valueOf(mAsyncRequestHandler.getCloudLatency() / 1000000) + " ms");
+                        mEdgeLatency.setText("Edge Latency: " + String.valueOf(mAsyncRequestHandler.getEdgeLatency() / 1000000) + " ms");
+                        mCloudStd.setText("Cloud STDDEV: " + new DecimalFormat("#.##").format(mAsyncRequestHandler.cloudStdDev / 1000000) + " ms");
+                        mEdgeStd.setText("Edge STDDEV: " + new DecimalFormat("#.##").format(mAsyncRequestHandler.edgeStdDev / 1000000) + " ms");
+
+
+                        // mRectangle.setImageBitmap(displayBitmap);
+                    }
+                });
+
+                if (image != null) {
+                    image.close();
+                }
             }
         }
 
@@ -644,9 +652,13 @@ public class Camera2BasicFragment extends Fragment
         // mTextureView = (AutoFitTextureView) view.findViewById(R.id.texture);
         mTextureView = (AutoFitTextureView) view.findViewById(R.id.textureView);
         mCloudLatency = view.findViewById(R.id.cloud_latency);
+        mCloudLatency.setTextColor(Color.RED);
         mEdgeLatency = view.findViewById(R.id.edge_latency);
+        mEdgeLatency.setTextColor(Color.GREEN);
         mCloudStd = view.findViewById(R.id.cloud_std_dev);
+        mCloudStd.setTextColor(Color.RED);
         mEdgeStd = view.findViewById(R.id.edge_std_dev);
+        mEdgeStd.setTextColor(Color.GREEN);
         mCloudBB = view.findViewById(R.id.cloudBB);
         mCloudBB.setColor(Color.RED);
 
@@ -742,6 +754,7 @@ public class Camera2BasicFragment extends Fragment
                 Size largest = Collections.max(
                         Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)),
                         new CompareSizesByArea());
+
                 mImageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(),
                         ImageFormat.JPEG, /*maxImages*/2);
                 mImageReader.setOnImageAvailableListener(

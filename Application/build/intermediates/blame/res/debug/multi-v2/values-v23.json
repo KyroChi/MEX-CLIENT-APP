@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "/Users/kyle/work/mobile_edge_x/android-Camera2Basic/Application/build/intermediates/incremental/mergeDebugResources/merged.dir/values-v23/values-v23.xml",
+            "outputFile": "/Users/kyle/work/mobile_edge_x/MobiledgeX_OpenCV_Demo_App/client/Application/build/intermediates/incremental/mergeDebugResources/merged.dir/values-v23/values-v23.xml",
             "map": [
                 {
                     "source": "/Users/kyle/.gradle/caches/transforms-1/files-1.1/cardview-v7-27.0.2.aar/dfafd6b2fad67fad4e103ee42a3f48ba/res/values-v23/values-v23.xml",
