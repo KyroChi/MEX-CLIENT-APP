@@ -1,7 +1,0 @@
-#Internal package file, do not edit.
-#Wed Sep 12 09:41:54 PDT 2018
-0.baseType=DIRECTORY
-0.base=/Users/kyle/work/mobile_edge_x/MobiledgeX_OpenCV_Demo_App/client/Application/build/intermediates/transforms/dexMerger/debug/34
-0.path=classes.dex
-0.set=DEX
-count=1

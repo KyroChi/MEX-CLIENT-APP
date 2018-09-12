@@ -1,4 +1,0 @@
-#Wed Sep 12 08:30:03 PDT 2018
-base.0=/Users/kyle/work/mobile_edge_x/MobiledgeX_OpenCV_Demo_App/client/Application/build/intermediates/transforms/dexMerger/debug/18
-path.0=classes.dex
-renamed.0=classes.dex
