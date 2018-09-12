@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merger version="3"><dataSet config="main"><source path="/Users/kyle/work/mobile_edge_x/android-Camera2Basic/Application/src/main/assets"/><source path="/Users/kyle/work/mobile_edge_x/android-Camera2Basic/Application/build/generated/assets/shaders/debug"/></dataSet><dataSet config="debug"><source path="/Users/kyle/work/mobile_edge_x/android-Camera2Basic/Application/src/debug/assets"/></dataSet></merger>

@@ -1,0 +1,4 @@
+#Tue Aug 28 13:01:16 PDT 2018
+base.0=/Users/kyle/work/mobile_edge_x/android-Camera2Basic/Application/build/intermediates/transforms/dexMerger/debug/0
+path.0=classes.dex
+renamed.0=classes.dex
